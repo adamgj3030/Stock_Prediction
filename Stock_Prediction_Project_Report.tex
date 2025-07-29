@@ -1,0 +1,147 @@
+% Loosely formatted ACM SIG conference report
+\documentclass[sigconf]{acmart}
+
+% --------------------------------------------------
+% Metadata (adjust as needed for the final template)
+% --------------------------------------------------
+\title{Stock Price Prediction on NASDAQ Data:\\A Comparison of Linear Regression and Deep Neural Networks}
+
+\author{Adam Johnson}
+\affiliation{%
+  \institution{University of Houston}
+  \city{Houston}
+  \state{TX}
+  \country{USA}}
+\email{adam.johnson@example.edu}
+
+% --------------------------------------------------
+\begin{document}
+
+\begin{abstract}
+This report investigates the effectiveness of two machine‐learning approaches — linear regression and a two‑layer deep neural network — for forecasting future stock returns on NASDAQ equities.  Using fifteen‑day and sixty‑day historical windows, we train the models to predict five‑ and twenty‑day returns, respectively.  We benchmark predictive accuracy (RMSE, MAPE, $R^2$, directional accuracy) and simulated trading performance against a passive buy‑and‑hold baseline and discuss the impact of under‑ and over‑fitting on real‑world profitability.
+\end{abstract}
+
+\maketitle
+
+% =====================
+\section{Group Members and Individual Contributions}
+% =====================
+I completed every part of the project individually.  No additional group members contributed.
+
+% =====================
+\section{Introduction and Problem Description}
+% =====================
+Accurately forecasting stock prices is notoriously difficult because market behaviour is driven by a tangled mix of sentiment, macro‑economic factors, breaking news and human psychology.  Yet investors, analysts and trading algorithms all seek models that can reliably anticipate price movements.  
+
+Our objective is to apply machine‑learning (ML) techniques to predict **future closing prices** (expressed as returns) for NASDAQ‑listed equities.  Historical price data — retrieved with the \texttt{yfinance} package — provide input features (\textit{Open, High, Low, Close, Volume}) over rolling windows of length 15 or 60 days.  Corresponding target returns are measured 5 or 20 days ahead.  Supplementary metadata (\texttt{symbols\_valid\_meta.csv}) supply company names, exchange details and market categories that may prove useful for future feature engineering.
+
+% =====================
+\section{Literature Review}
+% =====================
+\textbf{Support Vector Machines}\,\cite{huang2005svm}:  Huang \textit{et al.} formulated the prediction task as a binary classification (“up” vs “down”) and fed engineered indicators such as moving averages into an SVM.  Their work showed that even simple ML classifiers can outperform naïve baselines when supplied with informative features.
+
+\textbf{Decision Trees and Random Forests}\,\cite{patel2015rf}:  Patel \textit{et al.} compared individual decision trees with ensemble random forests.  The ensemble’s ability to average many diverse trees yielded more stable forecasts in volatile regimes.
+
+\textbf{Long Short‑Term Memory (LSTM) Networks}\,\cite{hiransha2018lstm}:  Recognising that price series possess temporal dependencies, Hiransha \textit{et al.} employed LSTMs to learn long‑range patterns directly from raw sequences.  Their deep‑learning model achieved lower error than linear benchmarks in multiple markets.
+
+These studies highlight the trade‑offs between interpretability, non‑linearity and sequence modelling that motivate our own comparison of linear regression and a compact deep neural network (DNN).
+
+% =====================
+\section{Machine Learning Models, Methods, or Algorithms}
+% =====================
+\subsection{Model Definitions}
+\begin{description}
+  \item[Linear Regression] fits a single set of weights to map the scaled feature vector at time $t$ to the return at $t{+}\Delta$.  The model is fast, transparent and provides a strong baseline but is limited to linear relationships.
+  \item[Deep Neural Network (DNN)] comprises two fully‑connected hidden layers (sizes 64 and 32) with ReLU activations.  We train with the Adam optimiser, batch size 256 and a maximum of 500 epochs.  Although expressive, the network risks memorising noise in small training sets.
+\end{description}
+
+\subsection{Data \& Training Setup}
+\begin{itemize}
+  \item \textbf{Input windows:} 15 or 60 consecutive trading days of (Open, High, Low, Close, Volume), standardised to zero mean and unit variance.
+  \item \textbf{Forecast horizons:} 5‑day or 20‑day future returns.
+  \item \textbf{Split:} 70\% training, 15\% validation, 15\% test (chronologically ordered to prevent look‑ahead bias).
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+\begin{itemize}
+  \item Root Mean Squared Error (RMSE)
+  \item Mean Absolute Percentage Error (MAPE)
+  \item Coefficient of Determination ($R^2$)
+  \item Directional Accuracy (percentage of correctly predicted up/down moves)
+  \item Simulated trading outcomes starting from \$10{,}000:
+        \begin{itemize}
+          \item \textit{Buy‑and‑Hold}: passive benchmark.
+          \item \textit{Model‑Driven}: each day invests $(\text{predicted return})\times\$10{,}000$ long (positive) or short (negative) for the forecast horizon.
+        \end{itemize}
+\end{itemize}
+
+% =====================
+\section{Experiment Results}
+% =====================
+\subsection{Linear Regression}
+\textbf{15‑day / 5‑day horizon}
+\begin{itemize}
+  \item Train — RMSE 0.0267, MAPE 233.5\%, $R^2$ –0.112, DirAcc 53\%
+  \item Val     — RMSE 0.0201, MAPE 273.3\%, $R^2$ –0.233, DirAcc 48\%
+  \item Test    — RMSE 0.0263, MAPE 330.6\%, $R^2$ –0.366, DirAcc 43\%
+  \item Cash    — Buy‑and‑Hold \$12,401; Model‑Driven \$9,863
+\end{itemize}
+
+\textbf{60‑day / 20‑day horizon}
+\begin{itemize}
+  \item Train — RMSE 0.0451, MAPE 213.9\%, $R^2$ 0.071, DirAcc 62\%
+  \item Val     — RMSE 0.0361, MAPE 237.8\%, $R^2$ –0.280, DirAcc 47\%
+  \item Test    — RMSE 0.0463, MAPE 183.4\%, $R^2$ –0.137, DirAcc 45\%
+  \item Cash    — Buy‑and‑Hold \$16,268; Model‑Driven \$9,815
+\end{itemize}
+
+\subsection{Deep Neural Network}
+\textbf{15‑day / 5‑day horizon}
+\begin{itemize}
+  \item Train — RMSE 0.0293, MAPE 369.1\%, $R^2$ –0.336, DirAcc 57\%
+  \item Val     — RMSE 0.0600, MAPE 1,407\%, $R^2$ –10.05, DirAcc 53\%
+  \item Test    — RMSE 0.2031, MAPE 7,533\%, $R^2$ –80.56, DirAcc 63\%
+  \item Cash    — Buy‑and‑Hold \$12,401; Model‑Driven \$10,963
+\end{itemize}
+
+\textbf{60‑day / 20‑day horizon}
+\begin{itemize}
+  \item Train — RMSE 0.0440, MAPE 267.9\%, $R^2$ 0.116, DirAcc 65\%
+  \item Val     — RMSE 0.0675, MAPE 755\%, $R^2$ –3.49, DirAcc 51\%
+  \item Test    — RMSE 0.1275, MAPE 1,133\%, $R^2$ –7.63, DirAcc 69\%
+  \item Cash    — Buy‑and‑Hold \$16,268; Model‑Driven \$14,757
+\end{itemize}
+
+\subsection{Analysis}
+Linear regression delivers the 
+lowest numeric errors but underfits, producing trading returns that trail a passive benchmark.  The DNN captures direction better (up to 69\% accuracy) and, despite noisy point forecasts, generates higher trading profits.  However, the widening gap between training and validation/test errors signals severe over‑fitting.
+
+% =====================
+\section{Conclusion}
+% =====================
+Our study reinforces two lessons for financial ML.  First, simple linear baselines are hard to beat on classical accuracy scores yet often fail to translate that accuracy into profit.  Second, powerful non‑linear models may uncover richer signals, but careful regularisation (dropout, early stopping) and additional data are essential to curb over‑fitting.
+
+Future work will explore richer feature sets (news sentiment, technical indicators) and hybrid ensembles that blend a regularised linear model for position sizing with a well‑regularised DNN for directional calls.
+
+% --------------------------------------------------
+% References (placeholders)
+% --------------------------------------------------
+\bibliographystyle{ACM-Reference-Format}
+\begin{thebibliography}{9}
+\bibitem{huang2005svm}
+  W.~Huang, Y.~Nakamori, and S.~Wang. 2005.
+  Forecasting Stock Market Movement Direction with Support Vector Machines.
+  \emph{Computers \& Operations Research} 32, 10 (2005), 2513--2522.
+
+\bibitem{patel2015rf}
+  J.~Patel, S.~Shah, P.~Thakkar, and K.~Kotecha. 2015.
+  Predicting Stock and Stock Price Index Movement Using Trend Deterministic Data Preparation and Machine Learning Techniques.
+  \emph{Expert Systems with Applications} 42, 1 (2015), 259--268.
+
+\bibitem{hiransha2018lstm}
+  M.~Hiransha, E.~Gopalakrishnan, V.~Menon, and K.~Soman. 2018.
+  NSE Stock Market Prediction Using Deep‑Learning Models.
+  \emph{Procedia Computer Science} 132 (2018), 1351--1362.
+\end{thebibliography}
+
+\end{document}
